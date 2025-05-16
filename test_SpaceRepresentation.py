@@ -1,12 +1,12 @@
 import numpy as np
-from numpy import pi, sqrt, cos, sin
 import pytest
+from numpy import cos, pi, sin, sqrt
 from space_representation import (
+    AxisAngle,
+    EulerAnglesZYZ,
+    Quaternion,
     RotationMatrix,
     TransformationMatrix,
-    EulerAnglesZYZ,
-    AxisAngle,
-    Quaternion,
 )
 
 
@@ -40,7 +40,13 @@ def test_RotationMatrix():
 
 
 def test_TransformationMatrix():
-    None
+    Ttrasl1 = TransformationMatrix.translation_pure(
+        traslation_vector=np.array([6, -2, 10])
+    )
+    Trotx90 = TransformationMatrix.rotation_pure("X", 90 * pi / 180)
+
+    aTb = Ttrasl1.matrix @ Trotx90.matrix
+    print(aTb)
 
 
 def test_RollPitchYaw():

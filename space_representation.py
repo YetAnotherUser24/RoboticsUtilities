@@ -1,4 +1,5 @@
 import numpy as np
+import sympy as sp
 from numpy import cos, sin, atan2, sqrt, pi
 from numpy import ndarray
 
@@ -245,56 +246,64 @@ class RotationMatrix:
 
 
 class TransformationMatrix:
-    def __init__(self, rotation_matrix=None, traslation_vector=None):
+    def __init__(self, matrix=None, rotation_matrix=None, traslation_vector=None):
         self.matrix = np.zeros((4, 4))
         self.matrix[3, 3] = 1
-        self.rotation_matrix = RotationMatrix(np.eye(3))
+        self.rotation_matrix = RotationMatrix(np.eye(3)).matrix
         self.traslation_vector = np.array([0, 0, 0])
 
         if rotation_matrix is not None:
-            self.rotation_matrix = rotation_matrix
+            if isinstance(rotation_matrix, RotationMatrix):
+                self.rotation_matrix = rotation_matrix.matrix
+            else:
+                self.rotation_matrix = rotation_matrix
         if traslation_vector is not None:
             self.traslation_vector = traslation_vector
 
         self.matrix[0:3, 0:3] = self.rotation_matrix
         self.matrix[0:3, 3] = self.traslation_vector
 
+        if matrix is not None:
+            self.matrix = matrix
+            self.rotation_matrix = self.matrix[0:3, 0:3]
+            self.traslation_vector = self.matrix[0:3, 3]
+
     def __array__(self):
         return self.matrix
 
     def __add__(self, other):
         if isinstance(other, ndarray):
-            return TransformationMatrix(self.matrix + other)
+            return TransformationMatrix(matrix=self.matrix + other)
 
         if isinstance(other, TransformationMatrix):
-            return TransformationMatrix(self.matrix + other.matrix)
+            return TransformationMatrix(matrix=self.matrix + other.matrix)
 
         raise TypeError
 
     def __sub__(self, other):
         if isinstance(other, ndarray):
-            return TransformationMatrix(self.matrix - other)
+            return TransformationMatrix(matrix=self.matrix - other)
 
         if isinstance(other, TransformationMatrix):
-            return TransformationMatrix(self.matrix - other.matrix)
+            return TransformationMatrix(matrix=self.matrix - other.matrix)
 
         raise TypeError
 
     def __mul__(self, other):
         if isinstance(other, ndarray):
-            return TransformationMatrix(self.matrix * other)
+            return TransformationMatrix(matrix=self.matrix * other)
 
         if isinstance(other, TransformationMatrix):
-            return TransformationMatrix(self.matrix * other.matrix)
+            return TransformationMatrix(matrix=self.matrix * other.matrix)
 
         raise TypeError
 
     def __matmul__(self, other):
         if isinstance(other, ndarray):
-            return TransformationMatrix(self.matrix @ other)
+            return TransformationMatrix(matrix=self.matrix @ other)
 
         if isinstance(other, TransformationMatrix):
-            return TransformationMatrix(self.matrix @ other.matrix)
+            return TransformationMatrix(matrix=self.matrix @ other.matrix)
 
         raise TypeError
 
@@ -334,16 +343,16 @@ class TransformationMatrix:
             return cls(rotation_matrix=rotation_matrix)
 
         if axis == "X":
-            return cls(rotation_matrix=RotationMatrix.rotation_x(angle).matrix)
+            return cls(rotation_matrix=RotationMatrix.rotation_x(angle))
         elif axis == "Y":
-            return cls(rotation_matrix=RotationMatrix.rotation_y(angle).matrix)
+            return cls(rotation_matrix=RotationMatrix.rotation_y(angle))
         elif axis == "Z":
-            return cls(rotation_matrix=RotationMatrix.rotation_z(angle).matrix)
+            return cls(rotation_matrix=RotationMatrix.rotation_z(angle))
 
         raise ValueError("Axis must be one of the following: X,Y,Z")
 
     @classmethod
-    def translation_pure(cls, axis, distance, traslation_vector=None):
+    def translation_pure(cls, axis=None, distance=None, traslation_vector=None):
         if traslation_vector is not None:
             return cls(traslation_vector=traslation_vector)
 
@@ -473,8 +482,8 @@ class AxisAngle:
         self.axis = axis
         self.angle = angle
 
-    def to_str_degrees(self):
-        return f"AxisAngle({self.angle * 180 / pi}, {self.axis})"
+    def to_str_degrees(self, round=3):
+        return f"AxisAngle({np.round(self.angle * 180 / pi, round)}, {np.round(self.axis, round)})"
 
     def __str__(self):
         return f"AxisAngle({self.angle}, {self.axis})"
